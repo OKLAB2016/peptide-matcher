@@ -5,7 +5,7 @@ import wx, xlsxwriter
 class PMFrame(MyFrame):
 
     def on_button_fasta(self, event):
-        dlg = wx.FileDialog(self, message='Choose tabase fasta file', defaultFile='', style=(wx.FD_OPEN | wx.FD_CHANGE_DIR))
+        dlg = wx.FileDialog(self, message='Choose database fasta file', defaultFile='', style=(wx.FD_OPEN | wx.FD_CHANGE_DIR))
         if dlg.ShowModal() == wx.ID_OK:
             fastaPath = dlg.GetPath()
             self.text_fasta.SetValue(fastaPath)
@@ -28,22 +28,27 @@ class PMFrame(MyFrame):
         if num_rows > 0:
             self.grid_matches.DeleteRows(numRows=num_rows)
         fasta = self.text_fasta.GetValue()
+        secstruct_included = self.radio_box_secstruct.GetSelection()
         peptides = self.text_peptides.GetValue()
         flanks = int(self.spin_flanks.GetValue())
         progress_dialog = wx.ProgressDialog('Matching...', 'Matching the peptides...', parent=self, style=(wx.PD_APP_MODAL | wx.PD_AUTO_HIDE))
         progress_dialog.Pulse()
-        peptide_matcher = PeptideMatcher(fasta, peptides, flanks, self.grid_matches, progress_dialog)
-        try:
-            peptide_matcher.run()
-            self.button_save.Enable(True)
-        except Exception as e:
-            try:
-                msg_dialog = wx.MessageDialog(self, str(e), 'Error', wx.OK | wx.ICON_ERROR)
-                msg_dialog.ShowModal()
-                msg_dialog.Destroy()
-            finally:
-                e = None
-                del e
+        peptide_matcher = PeptideMatcher(fasta, secstruct_included, peptides, flanks, self.grid_matches, progress_dialog)
+
+        peptide_matcher.run()
+        self.button_save.Enable(True)
+
+        #try:
+        #    peptide_matcher.run()
+        #    self.button_save.Enable(True)
+        #except Exception as e:
+        #    try:
+        #        msg_dialog = wx.MessageDialog(self, str(e), 'Error', wx.OK | wx.ICON_ERROR)
+        #        msg_dialog.ShowModal()
+        #        msg_dialog.Destroy()
+        #    finally:
+        #        e = None
+        #        del e
 
         progress_dialog.Destroy()
 
