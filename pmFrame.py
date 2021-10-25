@@ -35,20 +35,17 @@ class PMFrame(MyFrame):
         progress_dialog.Pulse()
         peptide_matcher = PeptideMatcher(fasta, secstruct_included, peptides, flanks, self.grid_matches, progress_dialog)
 
-        peptide_matcher.run()
-        self.button_save.Enable(True)
-
-        #try:
-        #    peptide_matcher.run()
-        #    self.button_save.Enable(True)
-        #except Exception as e:
-        #    try:
-        #        msg_dialog = wx.MessageDialog(self, str(e), 'Error', wx.OK | wx.ICON_ERROR)
-        #        msg_dialog.ShowModal()
-        #        msg_dialog.Destroy()
-        #    finally:
-        #        e = None
-        #        del e
+        try:
+            peptide_matcher.run()
+            self.button_save.Enable(True)
+        except Exception as e:
+            try:
+                msg_dialog = wx.MessageDialog(self, str(e), 'Error', wx.OK | wx.ICON_ERROR)
+                msg_dialog.ShowModal()
+                msg_dialog.Destroy()
+            finally:
+                e = None
+                del e
 
         progress_dialog.Destroy()
 

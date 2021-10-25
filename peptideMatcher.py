@@ -17,6 +17,7 @@ class PeptideMatcher:
         self.progress_dialog = progress_dialog
         self.secstruct_re = re.compile('secstruct:([^\s]+)')
         self.acc_re = re.compile('accessibility:([^\s]+)')
+        self.conf_re = re.compile('confidence:([^\s]+)')
 
     def parse_peptides(self):
         self.automaton = Automaton()
@@ -41,9 +42,13 @@ class PeptideMatcher:
                 if self.secstruct_included:
                     secstruct = self.secstruct_re.search(record.description)
                     acc = self.acc_re.search(record.description)
-                    assert secstruct and acc, "Record description does not contain secstruct or accessibility information: " + record.description
+                    conf = self.conf_re.search(record.description)
+                    assert secstruct, "Record description does not contain secondary structure: " + record.description
+                    assert acc, "Record description does not contain accessibility: " + record.description
+                    assert conf, "Record description does not contain confidence scores: " + record.description
                     secstruct = secstruct.group(1)
                     acc = acc.group(1).split(',')
+                    conf = conf.group(1).split(',')
                 for end_index, peptide in self.automaton.iter(record_seq):
                     start_index = end_index - len(peptide) + 1
                     start = start_index + 1
@@ -58,22 +63,29 @@ class PeptideMatcher:
                     else:
                         c_term = record_seq[end:] + ']'
                     if self.secstruct_included:
-                        peptide_secstruct = '%s^%s|%s^%s' % (
-                            secstruct[start_index - 1] if start_index > 0 else '[',
-                            secstruct[start_index],
-                            secstruct[end_index],
-                            secstruct[end_index + 1] if to_c_term > 0 else ']'
-                        )
-                        peptide_acc = '%s^%s|%s^%s' % (
-                            acc[start_index - 1] if start_index > 0 else '[',
-                            acc[start_index],
-                            acc[end_index],
-                            acc[end_index + 1] if to_c_term > 0 else ']'
-                        )
+                        ss_pept = secstruct[start_index:end]
+                        acc_pept = acc[start_index:end]
+                        conf_pept = conf[start_index:end]
+                        
+                        if start_index > self.flanks:
+                            ss_n_term = secstruct[start_index - self.flanks:start_index]
+                            acc_n_term = acc[start_index - self.flanks:start_index]
+                            conf_n_term = conf[start_index - self.flanks:start_index]
+                        else:
+                            ss_n_term = '[' + secstruct[0:start_index]
+                            acc_n_term = '[' + acc[0:start_index]
+                            conf_n_term = '[' + conf[0:start_index]
+                        if to_c_term > self.flanks:
+                            ss_c_term = secstruct[end:end + self.flanks]
+                            acc_c_term = acc[end:end + self.flanks]
+                            conf_c_term = conf[end:end + self.flanks]
+                        else:
+                            ss_c_term = secstruct[end:] + ']'
+                            acc_c_term = acc[end:] + ']'
+                            conf_c_term = conf[end:] + ']'
+                        data[peptide].append((record.id, start, end, n_term, c_term, to_c_term, ss_n_term, ss_pept, ss_c_term, conf_n_term, conf_pept, conf_c_term, acc_n_term, acc_pept, acc_c_term))
                     else:
-                        peptide_secstruct = ''
-                        peptide_acc = ''
-                    data[peptide].append((record.id, start, end, n_term, c_term, to_c_term, peptide_secstruct, peptide_acc))
+                        data[peptide].append((record.id, start, end, n_term, c_term, to_c_term))
         row = 0
         for peptide in self.peptide_seqs:
             peplen = len(peptide)
@@ -85,7 +97,7 @@ class PeptideMatcher:
                     all_n_terms.append([])
                     all_c_terms.append([])
                 data_peptide = data[peptide]
-                for record_id, start, end, n_term, c_term, to_c_term, peptide_secstruct, peptide_acc in data_peptide:
+                for record_id, start, end, n_term, c_term, to_c_term, *struct_info in data_peptide:
 
                     offset = self.flanks - len(n_term)
 
@@ -107,8 +119,18 @@ class PeptideMatcher:
                     self.grid.SetCellValue(row, 5, str(to_c_term + 1))
                     self.grid.SetCellValue(row, 6, str(n_term))
                     self.grid.SetCellValue(row, 7, str(c_term))
-                    self.grid.SetCellValue(row, 10, peptide_secstruct)
-                    self.grid.SetCellValue(row, 11, peptide_acc)
+
+                    if self.secstruct_included:
+                        ss_n_term, ss_pept, ss_c_term, conf_n_term, conf_pept, conf_c_term, acc_n_term, acc_pept, acc_c_term = struct_info
+                        self.grid.SetCellValue(row, 10, ss_n_term)
+                        self.grid.SetCellValue(row, 11, ss_pept)
+                        self.grid.SetCellValue(row, 12, ss_c_term)
+                        self.grid.SetCellValue(row, 13, ','.join(conf_n_term))
+                        self.grid.SetCellValue(row, 14, ','.join(conf_pept))
+                        self.grid.SetCellValue(row, 15, ','.join(conf_c_term))
+                        self.grid.SetCellValue(row, 16, ','.join(acc_n_term))
+                        self.grid.SetCellValue(row, 17, ','.join(acc_pept))
+                        self.grid.SetCellValue(row, 18, ','.join(acc_c_term))
                     row += 1
 
                 n_terms = ''
