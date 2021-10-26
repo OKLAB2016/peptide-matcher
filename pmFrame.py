@@ -54,8 +54,8 @@ class PMFrame(MyFrame):
         if dlg.ShowModal() == wx.ID_OK:
             outputPath = dlg.GetPath()
             table = self.grid_matches.GetTable()
-            row_num = table.GetRowsCount()
-            col_num = table.GetColsCount()
+            row_num = table.GetNumberRows()
+            col_num = table.GetNumberCols()
             workbook = xlsxwriter.Workbook(outputPath)
             worksheet = workbook.add_worksheet()
             cell_format = workbook.add_format({'bold': True})
