@@ -1,0 +1,8 @@
+name: peptide_matcher_alphafold_human
+dependencies:
+  - python>=3.6
+  - snakemake
+  - biopython
+  - pandas
+  - seqkit
+  - dssp

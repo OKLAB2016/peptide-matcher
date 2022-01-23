@@ -1,6 +1,7 @@
 from gui import MyFrame
 from peptideMatcher import PeptideMatcher
 import wx, xlsxwriter
+import traceback
 
 class PMFrame(MyFrame):
 
@@ -40,7 +41,7 @@ class PMFrame(MyFrame):
             self.button_save.Enable(True)
         except Exception as e:
             try:
-                msg_dialog = wx.MessageDialog(self, str(e), 'Error', wx.OK | wx.ICON_ERROR)
+                msg_dialog = wx.MessageDialog(self, '%s:\n%s' % (str(e), traceback.format_exc()), 'Error', wx.OK | wx.ICON_ERROR)
                 msg_dialog.ShowModal()
                 msg_dialog.Destroy()
             finally:

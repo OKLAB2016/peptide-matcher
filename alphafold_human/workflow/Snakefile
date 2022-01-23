@@ -1,0 +1,72 @@
+
+from collections import defaultdict
+
+configfile: "workflow/config.yml"
+
+pdb    = "%s/AF-{name}-F{part}-model_v%s.pdb" % (config['alphafold'], config['version'])
+dssp   = "dssp/AF-{name}-F{part}-model_v%s.txt" % config['version']
+parsed = "parsed/AF-{name}_v%s.csv" % config['version']
+
+fasta = "database/alphafold_v%s.fasta" % config['version']
+head  = "example/alphafold_head1000.fasta"
+peptides = "example/alphafold_peptides.txt"
+
+names, parts ,= glob_wildcards(pdb)
+assert names, "No pdb files found - please check the path and that the files are unpacked"
+
+name_parts = defaultdict(list)
+for i in range(len(names)):
+	name = names[i]
+	part = parts[i]
+	name_parts[name].append(part)
+
+rule all:
+	input:
+		fasta, head, peptides
+
+rule dssp:
+	input:
+		pdb
+	output:
+		dssp
+	shell:
+		"dssp -i {input} -o {output}"
+
+rule parse:
+	input:
+		pdbs  = lambda w: expand(pdb,  name = w.name, part = name_parts[w.name]),
+		dssps = lambda w: expand(dssp, name = w.name, part = name_parts[w.name])
+	output:
+		parsed 
+	script:
+		"scripts/parse.py"
+
+rule collect:
+	input:
+		parsed = expand(parsed, name = name_parts.keys()),
+		uniprot = config['uniprot']
+	output:
+		fasta
+	script:
+		"scripts/collect.py"
+
+rule fasta_head:
+	input:
+		fasta
+	output:
+		head
+	params:
+		n = 1000
+	shell:
+		"seqkit head -n1000 {input} -o {output}"
+
+rule fasta_peptides:
+	input:
+		fasta
+	output:
+		peptides
+	params:
+		min_len = 6,
+		max_len = 10
+	script:
+		"scripts/random_peptides.py"

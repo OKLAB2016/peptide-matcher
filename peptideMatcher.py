@@ -6,18 +6,20 @@ from ahocorasick import Automaton
 
 class PeptideMatcher:
 
-    def __init__(self, fasta, secstruct_included, peptides, flanks, grid, progress_dialog):
+    def __init__(self, fasta, sst_included, peptides, flanks, grid, progress_dialog):
         self.fasta = fasta
-        self.secstruct_included = secstruct_included
+        self.sst_included = sst_included
         self.peptides = peptides
         self.flanks = flanks
         self.flanks_range = list(range(flanks))
         self.flanks_revrange = list(reversed(range(flanks)))
         self.grid = grid
         self.progress_dialog = progress_dialog
-        self.secstruct_re = re.compile('secstruct:([^\s]+)')
-        self.acc_re = re.compile('accessibility:([^\s]+)')
+        self.sst_re  = re.compile('secstruct:([^\s]+)')
+        self.acc_re  = re.compile('accessibility:([^\s]+)')
         self.conf_re = re.compile('confidence:([^\s]+)')
+        self.tm_re   = re.compile('transmembrane:([^\s]+)')
+        self.cigar_re = re.compile('(\d+)(.)')
 
     def parse_peptides(self):
         self.automaton = Automaton()
@@ -31,6 +33,23 @@ class PeptideMatcher:
         assert len(self.automaton) > 0, "The peptide file seems to be empty"
         self.automaton.make_automaton()
 
+    def hexpairs(self, s, regex):
+        match = regex.search(s)
+        if match:
+            line = match.group(1)
+            return [ str(int(line[i:i+2], 16)) for i in range(0, len(line), 2) ]
+        else:
+            return []
+
+    def decompress(self, s, regex):
+        s2 = ''
+        match = regex.search(s)
+        if match:
+            line = match.group(1)
+            for num, char in self.cigar_re.findall(line):
+                s2 += char * int(num)
+        return s2
+
     def run(self):
         time_start = time()
         self.parse_peptides()
@@ -39,20 +58,23 @@ class PeptideMatcher:
             for record in SeqIO.parse(fp, 'fasta'):
                 record_seq = str(record.seq)
                 seq_len = len(record_seq)
-                if self.secstruct_included:
-                    secstruct_match = self.secstruct_re.search(record.description)
+                if self.sst_included:
+                    sst_match = self.sst_re.search(record.description)
                     acc_match = self.acc_re.search(record.description)
                     conf_match = self.conf_re.search(record.description)
-                    # assert secstruct, "Record description does not contain secondary structure: " + record.description
+                    tm_match   = self.tm_re.search(record.description)
+                    # assert sst, "Record description does not contain secondary structure: " + record.description
                     # assert acc, "Record description does not contain accessibility: " + record.description
                     # assert conf, "Record description does not contain confidence scores: " + record.description
                 else:
-                    secstruct_match = ''
-                    acc_match = []
-                    conf_match = []
-                secstruct = secstruct_match.group(1) if secstruct_match else ''
-                acc = acc_match.group(1).split(',') if acc_match else []
-                conf = conf_match.group(1).split(',') if conf_match else []
+                    sst_match  = ''
+                    acc_match  = ''
+                    conf_match = ''
+                    tm_match   = ''
+                sst  = self.decompress(record.description, self.sst_re)
+                tm   = self.decompress(record.description, self.tm_re)
+                acc  = self.hexpairs(record.description, self.acc_re)
+                conf = self.hexpairs(record.description, self.conf_re)
                 for end_index, peptide in self.automaton.iter(record_seq):
                     start_index = end_index - len(peptide) + 1
                     start = start_index + 1
@@ -66,18 +88,32 @@ class PeptideMatcher:
                         c_term = record_seq[end:end + self.flanks]
                     else:
                         c_term = record_seq[end:] + ']'
-                    if secstruct:
-                        ss_pept = secstruct[start_index:end]
+
+                    if sst:
+                        sst_pept = sst[start_index:end]
                         if start_index > self.flanks:
-                            ss_n_term = secstruct[start_index - self.flanks:start_index]
+                            sst_n_term = sst[start_index - self.flanks:start_index]
                         else:
-                            ss_n_term = '[' + secstruct[0:start_index]
+                            sst_n_term = '[' + sst[0:start_index]
                         if to_c_term > self.flanks:
-                            ss_c_term = secstruct[end:end + self.flanks]
+                            sst_c_term = sst[end:end + self.flanks]
                         else:
-                            ss_c_term = secstruct[end:] + ']'
+                            sst_c_term = sst[end:] + ']'
                     else:
-                        ss_pept = ss_n_term = ss_c_term = ''
+                        sst_pept = sst_n_term = sst_c_term = ''
+
+                    if tm:
+                        tm_pept = tm[start_index:end]
+                        if start_index > self.flanks:
+                            tm_n_term = tm[start_index - self.flanks:start_index]
+                        else:
+                            tm_n_term = '[' + tm[0:start_index]
+                        if to_c_term > self.flanks:
+                            tm_c_term = tm[end:end + self.flanks]
+                        else:
+                            tm_c_term = tm[end:] + ']'
+                    else:
+                        tm_pept = tm_n_term = tm_c_term = ''
 
                     if acc:
                         acc_pept = ','.join(acc[start_index:end])
@@ -103,7 +139,7 @@ class PeptideMatcher:
                             conf_c_term = ','.join(conf[end:]) + ']'
                     else:
                         conf_pept = conf_n_term = conf_c_term = ''
-                    data[peptide].append((record.id, start, end, n_term, c_term, to_c_term, ss_n_term, ss_pept, ss_c_term, conf_n_term, conf_pept, conf_c_term, acc_n_term, acc_pept, acc_c_term))
+                    data[peptide].append((record.id, start, end, n_term, c_term, to_c_term, sst_n_term, sst_pept, sst_c_term, tm_n_term, tm_pept, tm_c_term, conf_n_term, conf_pept, conf_c_term, acc_n_term, acc_pept, acc_c_term))
         row = 0
         for peptide in self.peptide_seqs:
             peplen = len(peptide)
@@ -138,17 +174,20 @@ class PeptideMatcher:
                     self.grid.SetCellValue(row, 6, str(n_term))
                     self.grid.SetCellValue(row, 7, str(c_term))
 
-                    if self.secstruct_included:
-                        ss_n_term, ss_pept, ss_c_term, conf_n_term, conf_pept, conf_c_term, acc_n_term, acc_pept, acc_c_term = struct_info
-                        self.grid.SetCellValue(row, 10, ss_n_term)
-                        self.grid.SetCellValue(row, 11, ss_pept)
-                        self.grid.SetCellValue(row, 12, ss_c_term)
-                        self.grid.SetCellValue(row, 13, conf_n_term)
-                        self.grid.SetCellValue(row, 14, conf_pept)
-                        self.grid.SetCellValue(row, 15, conf_c_term)
-                        self.grid.SetCellValue(row, 16, acc_n_term)
-                        self.grid.SetCellValue(row, 17, acc_pept)
-                        self.grid.SetCellValue(row, 18, acc_c_term)
+                    if self.sst_included:
+                        sst_n_term, sst_pept, sst_c_term, tm_n_term, tm_pept, tm_c_term, conf_n_term, conf_pept, conf_c_term, acc_n_term, acc_pept, acc_c_term = struct_info
+                        self.grid.SetCellValue(row, 10, sst_n_term)
+                        self.grid.SetCellValue(row, 11, sst_pept)
+                        self.grid.SetCellValue(row, 12, sst_c_term)
+                        self.grid.SetCellValue(row, 13, tm_n_term)
+                        self.grid.SetCellValue(row, 14, tm_pept)
+                        self.grid.SetCellValue(row, 15, tm_c_term)
+                        self.grid.SetCellValue(row, 16, conf_n_term)
+                        self.grid.SetCellValue(row, 17, conf_pept)
+                        self.grid.SetCellValue(row, 18, conf_c_term)
+                        self.grid.SetCellValue(row, 19, acc_n_term)
+                        self.grid.SetCellValue(row, 20, acc_pept)
+                        self.grid.SetCellValue(row, 21, acc_c_term)
                     row += 1
 
                 n_terms = ''

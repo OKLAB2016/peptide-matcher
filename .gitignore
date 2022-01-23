@@ -1,6 +1,9 @@
+*.bak
 *~
 \#~*
 *.spec
 __pycache__/
 build/
 dist/
+alphafold_human/database/
+Analysis-00.toc
