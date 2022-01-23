@@ -10,7 +10,7 @@ Statically built binaries are available for [download](https://github.com/alephr
 
 ### Source code
 
-Otherwise the repository can be cloned (or [downloaded](https://github.com/alephreish/peptide-matcher/archive/refs/heads/master.zip) and run in local environment:
+Otherwise the repository can be cloned (or [downloaded](https://github.com/alephreish/peptide-matcher/archive/refs/heads/master.zip)) and run in local environment:
 
     git clone https://github.com/alephreish/peptide-matcher.git
     python peptide-matcher/main.py
@@ -23,7 +23,7 @@ Bundles are generated with [PyInstaller](https://pyinstaller.readthedocs.io/) as
 
 ### alphafold\_human pipeline
 
-A [snakemake](https://snakemake.readthedocs.io/) workflow for generation of the fasta database containing structural information is supplied in the directory alphafold_human. The databases used were [swisspot's human proteome](https://www.uniprot.org/proteomes/UP000005640) and pdb structures from [alphafold](https://www.alphafold.ebi.ac.uk/download) v.2 of the human proteome.
+A [snakemake](https://snakemake.readthedocs.io/) workflow for generation of the fasta database containing structural information is supplied in `alphafold_human`. The databases used were [swisspot's human proteome](https://www.uniprot.org/proteomes/UP000005640) and pdb structures from [alphafold](https://www.alphafold.ebi.ac.uk/download) v.2 of the human proteome.
 
 ## How to use
 
@@ -31,15 +31,15 @@ A [snakemake](https://snakemake.readthedocs.io/) workflow for generation of the 
 
 Two files are needed: the database in fasta format with optional structural annotations for each position and a plain list of peptide sequences. Examples are provided in `alphafold_human/example`.
 
-The optional structural annotations should follow a custom format. The database generated based on alphafold's prediction for swissprot's human proteome is distributed with each [release](https://github.com/alephreish/peptide-matcher/releases/).
+The optional structural annotations should follow a custom format. The database generated based on alphafold's models for the human proteome in swissprot is distributed with each [release](https://github.com/alephreish/peptide-matcher/releases/).
 
 The results of the peptide matching are returned to the GUI and can be saved as xlsx (see example output in `alphafold_human/example/output.xlsx`). For each peptide the following output is generated:
 
 | Field          | Description                                    | Example                       | Values                                            |
 |----------------|------------------------------------------------|-------------------------------|---------------------------------------------------|
-| `Peptide`      | peptide sequence                               | QVHAVSFYSK                    | string                                            |
+| `Peptide`      | peptide sequence                               | QVHAVSFYSK                    | string of amino acid symbols                      |
 | `Length`       | peptide length                                 | 10                            | integer                                           |
-| `Protein`      | matching protein id                            | A6NL46                        | string                                            |
+| `Protein`      | matching protein id (swissprot)                | A6NL46                        | string                                            |
 | `Start`        | start position (1-based)                       | 150                           | integer                                           |
 | `End`          | end position (1-based)                         | 159                           | integer                                           |
 | `C-term`       | distance to protein's C-terminus               | 182                           | integer                                           |
@@ -50,7 +50,7 @@ The results of the peptide matching are returned to the GUI and can be saved as 
 | `N-flank SS`   | secondary structure for the N-flank            | HHHH                          | string of DSSP codes                              |
 | `Peptide SS`   | same for the peptide itself                    | HH------EE                    |                                                   |
 | `C-flank SS`   | same for the C-flank region                    | EEEE                          |                                                   |
-| `N-flank TM`   | transmembrane region for the N-flank           | TTTT                          | string of: `T` - TM regsion, `S` - signal peptide |
+| `N-flank TM`   | transmembrane region for the N-flank           | TTTT                          | string of: `T` - TM region, `S` - signal peptide  |
 | `Peptide TM`   | same for the peptide itself                    | TT--------                    |                                                   |
 | `C-flank TM`   | same for the C-flank region                    | ----                          |                                                   |
 | `N-flank conf` | alphafold's pLDDT score for the N-flank        | 43,46,40,49                   | list of integers 0-100                            |
