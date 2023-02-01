@@ -1,0 +1,4 @@
+organism: 'yeast'
+version: 2
+alphafold: 'alphafold/UP000002311_559292_YEAST_v2'
+uniprot: 'uniprot/UP000002311_559292.xml'

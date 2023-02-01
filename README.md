@@ -21,19 +21,19 @@ The gui is written with [wxWidgets](https://www.wxwidgets.org/). Other dependenc
 
 Bundles are generated with [PyInstaller](https://pyinstaller.readthedocs.io/) as implemented in the `distribute.py` script.
 
-### alphafold\_human pipeline
+### alphafold\_dssp pipeline
 
-A [snakemake](https://snakemake.readthedocs.io/) workflow for generation of the fasta database containing structural information is supplied in `alphafold_human`. The databases used were [swisspot's human proteome](https://www.uniprot.org/proteomes/UP000005640) and pdb structures from [alphafold](https://www.alphafold.ebi.ac.uk/download) v.2 of the human proteome.
+A [snakemake](https://snakemake.readthedocs.io/) workflow for generation of the fasta database containing structural information is supplied in `alphafold_dssp`. The databases used were [swisspot's human proteome](https://www.uniprot.org/proteomes/UP000005640) and pdb structures from [alphafold](https://www.alphafold.ebi.ac.uk/download) v.2 of the human proteome.
 
 ## How to use
 
 ![interface](doc/interface.png)
 
-Two files are needed: the database in fasta format with optional structural annotations for each position and a plain list of peptide sequences. Examples are provided in `alphafold_human/example`.
+Two files are needed: the database in fasta format with optional structural annotations for each position and a plain list of peptide sequences. Examples are provided in `alphafold_dssp/example`.
 
 The optional structural annotations should follow a custom format. The database generated based on alphafold's models for the human proteome in swissprot is distributed with each [release](https://github.com/alephreish/peptide-matcher/releases/).
 
-The results of the peptide matching are returned to the GUI and can be saved as xlsx (see example output in `alphafold_human/example/output.xlsx`). For each peptide the following output is generated:
+The results of the peptide matching are returned to the GUI and can be saved as xlsx (see example output in `alphafold_dssp/example/output.xlsx`). For each peptide the following output is generated:
 
 | Field          | Description                                    | Example                       | Values                                            |
 |----------------|------------------------------------------------|-------------------------------|---------------------------------------------------|

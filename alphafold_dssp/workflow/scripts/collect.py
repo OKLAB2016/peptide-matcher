@@ -11,7 +11,7 @@ parsed_files  = snakemake.input['parsed']
 uniprot_file  = str(snakemake.input['uniprot'])
 fasta_file    = str(snakemake.output)
 
-af_regex = re.compile(r'AF-(\w+)_v(\d)')
+af_regex = re.compile(r'AF-(\w+)')
 def parse_name(fname):
     search = af_regex.match(basename(fname))
     assert search, 'Unexpected file name: %s' % fname

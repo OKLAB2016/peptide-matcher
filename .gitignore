@@ -5,5 +5,5 @@
 __pycache__/
 build/
 dist/
-alphafold_human/database/
+alphafold_dssp/database/
 Analysis-00.toc

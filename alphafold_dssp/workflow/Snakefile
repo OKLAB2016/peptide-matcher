@@ -4,12 +4,12 @@ from collections import defaultdict
 configfile: "workflow/config.yml"
 
 pdb    = "%s/AF-{name}-F{part}-model_v%s.pdb" % (config['alphafold'], config['version'])
-dssp   = "dssp/AF-{name}-F{part}-model_v%s.txt" % config['version']
-parsed = "parsed/AF-{name}_v%s.csv" % config['version']
+dssp   = "dssp/%s_%s/AF-{name}-F{part}.txt" % (config['organism'], config['version'])
+parsed = "parsed/%s_%s/AF-{name}.csv" % (config['organism'], config['version'])
 
-fasta = "database/alphafold_v%s.fasta" % config['version']
-head  = "example/alphafold_head1000.fasta"
-peptides = "example/alphafold_peptides.txt"
+fasta = "database/alphafold_%s_v%s.fasta" % (config['organism'], config['version'])
+head  = "example/alphafold_%s_head1000.fasta" % config['organism']
+peptides = "example/alphafold_%s_peptides.txt" % config['organism']
 
 names, parts ,= glob_wildcards(pdb)
 assert names, "No pdb files found - please check the path and that the files are unpacked"
