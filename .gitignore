@@ -5,5 +5,5 @@
 __pycache__/
 build/
 dist/
-alphafold_dssp/database/
+*.egg-info/
 Analysis-00.toc

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "peptide_matcher"
+version = "0.2.0"
+authors = [
+  { name="Andrey Rozenberg", email="alephreish@gmail.com" },
+]
+description = "Peptide matcher"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "wxPython",
+    "xlsxwriter",
+    "pyahocorasick",
+    "biopython"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/OKLAB2016/peptide-matcher"
+"Bug Tracker" = "https://github.com/OKLAB2016/peptide-matcher/issues"
+
+[project.scripts]
+peptide_matcher = "peptide_matcher.main:run_cli"
+peptide_matcher_gui = "peptide_matcher.main:run_gui"

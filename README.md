@@ -1,52 +1,41 @@
-# Peptide-Matcher
+# peptide-matcher
 
-Peptide-Matcher is a GUI-based software that can be used for matching peptide sequences identified in proteomics experiments using a database-match or a de novo approach against a sequence database. The main purpose is to extract sequence context for the corresponding matches, but Peptide-Matcher can also provide structural context if provided with a database that includes structural information, such as `alphafold_v*.fasta` supplied with each [release](https://github.com/alephreish/peptide-matcher/releases/).
+peptide-matcher is a piece of software that can be used for matching peptide sequences identified in proteomics experiments using a database-match or a de novo approach against a sequence database. The main purpose is to extract sequence context for the corresponding matches, but peptide-matcher can also provide structural context if provided with a database that includes structural information, see [peptide-matcher-data](https://github.com/OKLAB2016/peptide-matcher-data/releases/).
+
+There are three ways of how to use peptide-matcher:
+
+* the GUI `peptide\_matcher\_gui`
+* the CLI `peptide\_matcher`
+* the python class `PeptideMatcher` -- `from peptide_matcher import PeptideMatcher`
+
+The gui is written with [wxWidgets](https://www.wxwidgets.org/). Other dependencies include [biopython](https://biopython.org/) and [pyahocorasick](https://pyahocorasick.readthedocs.io/).
 
 ## Installation
 
-### Binaries
+Install via pipy `pip install peptide_matcher`.
 
-Statically built binaries are available for [download](https://github.com/alephreish/peptide-matcher/releases/) for multiple platforms.
-
-### Source code
-
-Otherwise the repository can be cloned (or [downloaded](https://github.com/alephreish/peptide-matcher/archive/refs/heads/master.zip)) and run in local environment:
-
-    git clone https://github.com/alephreish/peptide-matcher.git
-    python peptide-matcher/main.py
-
-The gui is written with [wxWidgets](https://www.wxwidgets.org/). Other dependencies include [biopython](https://biopython.org/) and [pyahocorasick](https://pyahocorasick.readthedocs.io/). E.g. with pypi:
-
-    pip install biopython wxPython pyahocorasick
-
-Bundles are generated with [PyInstaller](https://pyinstaller.readthedocs.io/) as implemented in the `distribute.py` script.
-
-### alphafold\_dssp pipeline
-
-A [snakemake](https://snakemake.readthedocs.io/) workflow for generation of the fasta database containing structural information is supplied in `alphafold_dssp`. The databases used were [swisspot's human proteome](https://www.uniprot.org/proteomes/UP000005640) and pdb structures from [alphafold](https://www.alphafold.ebi.ac.uk/download) v.2 of the human proteome.
-
-## How to use
+## How to use the GUI
 
 ![interface](doc/interface.png)
 
-Two files are needed: the database in fasta format with optional structural annotations for each position and a plain list of peptide sequences. Examples are provided in `alphafold_dssp/example`.
+Two files are needed: the database in fasta format with optional structural annotations (see below) and a plain list of peptide sequences.
 
-The optional structural annotations should follow a custom format. The database generated based on alphafold's models for the human proteome in swissprot is distributed with each [release](https://github.com/alephreish/peptide-matcher/releases/).
+The optional structural annotations should follow a custom format. Databases generated based on alphafold's models for a couple of popular model organisms are distributed at [peptide-matcher-data](https://github.com/OKLAB2016/peptide-matcher-data/releases/).
 
-The results of the peptide matching are returned to the GUI and can be saved as xlsx (see example output in `alphafold_dssp/example/output.xlsx`). For each peptide the following output is generated:
+The results of the peptide matching are returned to the GUI and can be saved as xlsx. For each peptide the following output is generated:
 
 | Field          | Description                                    | Example                       | Values                                            |
 |----------------|------------------------------------------------|-------------------------------|---------------------------------------------------|
 | `Peptide`      | peptide sequence                               | QVHAVSFYSK                    | string of amino acid symbols                      |
 | `Length`       | peptide length                                 | 10                            | integer                                           |
-| `Protein`      | matching protein id (swissprot)                | A6NL46                        | string                                            |
+| `Protein`      | matching protein id                            | A6NL46                        | string                                            |
 | `Start`        | start position (1-based)                       | 150                           | integer                                           |
 | `End`          | end position (1-based)                         | 159                           | integer                                           |
 | `C-term`       | distance to protein's C-terminus               | 182                           | integer                                           |
 | `N-flank`      | N-flanking residues in this protein            | TDKA                          | string                                            |
 | `C-flank`      | C-flanking residues in this protein            | GHGV                          | string                                            |
-| `N-flank*`     | weblogo for each position of the N-flank       | {2T}{2D}{2K}{2A}              | `{}` - one position, `\|` - state separator       |
-| `C-flank*`     | weblogo for each position of the C-flank       | {1G\|1D}{2H}{1G\|1E}{2V}      |                                                   |
+| `N-flank*`     | weblogo for each position of the N-flank       | 2T\|2D\|2K\|2A                | `\|` - separator between positions                |
+| `C-flank*`     | weblogo for each position of the C-flank       | 1G1D\|2H\|1G1E\|2V            |                                                   |
 | `N-flank SS`   | secondary structure for the N-flank            | HHHH                          | string of DSSP codes                              |
 | `Peptide SS`   | same for the peptide itself                    | HH------EE                    |                                                   |
 | `C-flank SS`   | same for the C-flank region                    | EEEE                          |                                                   |
@@ -62,3 +51,41 @@ The results of the peptide matching are returned to the GUI and can be saved as 
 
 In the provided database, the RSA values are calculated by dividing the absolute solvent accessibility (ASA) as produced by dssp (mkdssp v.3.0.0) by the theoretical maximum values for ASA from [Tien et al 2013](https://dx.doi.org/10.1371%2Fjournal.pone.0080635).
 
+## How to use CLI
+
+Check out `peptide_matcher -h`:
+
+```
+$ peptide_matcher -h
+usage: peptide_matcher [-h] --peptides FILENAME --database FILENAME [--secstruct] [--flanks N] [--format {json,tsv,csv}] [--output OUTPUT]
+
+Match peptides in a protein database.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --peptides FILENAME, -p FILENAME
+                        list of peptides to match
+  --database FILENAME, -d FILENAME
+                        protein database in fasta format
+  --secstruct, -s       whether the database also contains structural information
+  --flanks N, -f N      length of the flanks to report (default: 4)
+  --format {json,tsv,csv}, -F {json,tsv,csv}
+                        output format (default: json)
+  --output OUTPUT, -o OUTPUT
+                        output file (default: output to stdout)
+```
+
+The output is similar to that of the GUI. The header of the tabular output formats looks as follows: `[ 'peptide', 'peplen', 'record_id', 'start', 'end', 'c_term', 'n_flank', 'c_flank', 'n_logos', 'c_logos', 'sst_n_term', 'sst_pept', 'sst_c_term', 'tm_n_term', 'tm_pept', 'tm_c_term', 'conf_n_term', 'conf_pept', 'conf_c_term', 'acc_n_term', 'acc_pept', 'acc_c_term' ]`. The json output is a list of dictionaries with each one of the following format: `{"peptide": "IYGALAVGAP", "matches": [{"record_id": "P77549", "start": 157, "end": 166, "c_term": 227, "n_flank": "NGMA", "c_flank": "LGLL", "sst_n_term": "HHHH", "sst_pept": "HHHHHHHHHH", "sst_c_term": "HHHH", "tm_n_term": "----", "tm_pept": "----------", "tm_c_term": "----", "conf_n_term": [94, 89, 91, 94], "conf_pept": [93, 86, 88, 94, 89, 85, 90, 92, 86, 88], "conf_c_term": [93, 94, 91, 94], "acc_n_term": [3, 6, 25, 6], "acc_pept": [9, 24, 19, 0, 25, 50, 44, 0, 22, 45], "acc_c_term": [36, 0, 37, 47]}], "n_logos": [{"N": 1}, {"G": 1}, {"M": 1}, {"A": 1}], "c_logos": [{"L": 1}, {"G": 1}, {"L": 1}, {"L": 1}]}`.
+
+## How to use the API
+
+```
+from peptide_matcher import PeptideMatcher, wrap_logos, wrap_scores
+peptides = [ 'IYGALAVGAP', 'LTCDETPVFSGSVLN', 'KRFARESGMTLL', 'GAGFAELLSSLQTPEIK', 'RTGHKLV' ] # or a file handle
+database = 'UP000000625_83333_ECOLI.fasta' # or a file handle
+flanks = 4
+secstruct = True
+pm = PeptideMatcher(peptides, database, secstruct, flanks)
+for output in pm.run():
+    print(output)
+```
