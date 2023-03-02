@@ -1,4 +1,0 @@
-biopython>=1.78
-pyahocorasick>=1.4.2
-wxPython>=4.0.7
-XlsxWriter>=3.0.1

@@ -4,21 +4,21 @@ peptide-matcher is a piece of software that can be used for matching peptide seq
 
 There are three ways of how to use peptide-matcher:
 
-* the GUI `peptide\_matcher\_gui`
-* the CLI `peptide\_matcher`
-* the python class `PeptideMatcher` -- `from peptide_matcher import PeptideMatcher`
+* the GUI `peptide_matcher_gui`
+* the CLI `peptide_matcher`
+* the python class `peptide_matcher.PeptideMatcher`
 
-The gui is written with [wxWidgets](https://www.wxwidgets.org/). Other dependencies include [biopython](https://biopython.org/) and [pyahocorasick](https://pyahocorasick.readthedocs.io/).
+The GUI is written with [wxWidgets](https://www.wxwidgets.org/). Other dependencies include [biopython](https://biopython.org/) and [pyahocorasick](https://pyahocorasick.readthedocs.io/).
 
 ## Installation
 
-Install via pipy `pip install peptide_matcher`.
+Install with pipy: `pip install peptide_matcher`.
 
 ## How to use the GUI
 
 ![interface](doc/interface.png)
 
-Two files are needed: the database in fasta format with optional structural annotations (see below) and a plain list of peptide sequences.
+Two files are needed: the database in fasta format with optional structural annotations and a plain list of peptide sequences.
 
 The optional structural annotations should follow a custom format. Databases generated based on alphafold's models for a couple of popular model organisms are distributed at [peptide-matcher-data](https://github.com/OKLAB2016/peptide-matcher-data/releases/).
 
